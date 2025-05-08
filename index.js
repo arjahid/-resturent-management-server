@@ -33,6 +33,15 @@ async function run() {
    const reviewCollection=client.db('resturentDb').collection('reviews');
    const cardCollection=client.db('resturentDb').collection('carts');
 
+
+    // users collection
+    app.post('/users',async(req,res)=>{
+      const user=req.body;
+      const result=await userCollection.insertOne(user);
+      res.send(result)
+    })  
+
+
    app.get('/menu',async(req,res)=>{
     const result=await menuCollection.find().toArray();
     res.send(result)
