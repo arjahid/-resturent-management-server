@@ -3,6 +3,7 @@ const app = express();
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const cors = require('cors');
 const e = require('express');
+const jwt= require('jsonwebtoken');
 const port = process.env.PORT || 3000;
 require('dotenv').config()
 
@@ -34,6 +35,13 @@ async function run() {
     const cardCollection = client.db('resturentDb').collection('carts');
 
 
+    // jwt token
+    app.post('/jwt',async(req,res=>{
+      const user=req.body;
+      const token=jwt.sign(user,process.env.ACCESS_TOKEN_SECRET,{expiresIn:'1h'});
+      res.send({token})
+    }))
+
     // users collection
     app.get('/users', async (req, res) => {
       const result = await userCollection.find().toArray();
@@ -54,6 +62,19 @@ async function run() {
       res.send(result)
     })
     // menu releted api
+   app.patch('/users/admin/:id',async(req,res)=>{
+    const id = req.params.id;
+    const filter={_id: new ObjectId(id)}
+    const updateDoc={
+      $set:{
+        role:'admin'
+      }
+    }
+    const result=await userCollection.updateOne(filter,updateDoc);
+    res.send(result);
+
+   })
+
     app.delete('/users/:id',async(req,res)=>{
       const id = req.params.id;
       const query={ _id: new ObjectId(id) }
