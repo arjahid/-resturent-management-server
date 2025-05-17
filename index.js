@@ -44,7 +44,7 @@ async function run() {
 
     // verify jwt middleware
     const verifyToken = (req, res, next) => {
-      console.log('inside', req.headers.authorization)
+      // console.log('inside', req.headers.authorization)
       if (!req.headers.authorization) {
         return res.status(401).send({ message: 'unauthorized access' })
       }
@@ -80,6 +80,7 @@ async function run() {
       const result = await userCollection.find().toArray();
       res.send(result)
     })
+    // verify admin after verify token
     app.get('/users/admin/:email',verifyToken,async(req,res)=>{
       const email= req.params.email;
       if(email !==req.decoded.email){
