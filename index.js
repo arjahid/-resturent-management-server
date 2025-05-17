@@ -44,7 +44,7 @@ async function run() {
 
     // verify jwt middleware
     const verifyToken = (req, res, next) => {
-      console.log('inside', req.headers.authorization)
+
       if (!req.headers.authorization) {
         return res.status(401).send({ message: 'unauthorized access' })
       }
@@ -57,11 +57,22 @@ async function run() {
         next();
       })
 
-      // next()
+
+    }
+    // verify admin middleware
+    const verifyAdmin = async (req, res, next) => {
+      const email = req.decoded.email;
+      const query = { email: email }
+      const user = await userCollection.findOne(query);
+      const isAdmin = user?.role === 'admin';
+      if (!isAdmin) {
+        return res.status(403).send({ message: 'forbidden access' })
+      }
+      next();
     }
 
     // users collection
-    app.get('/users', verifyToken, async (req, res) => {
+    app.get('/users', verifyToken, verifyAdmin, async (req, res) => {
 
       const result = await userCollection.find().toArray();
       res.send(result)
@@ -80,19 +91,31 @@ async function run() {
       const result = await userCollection.find().toArray();
       res.send(result)
     })
-    app.get('/users/admin/:email',verifyToken,async(req,res)=>{
-      const email= req.params.email;
-      if(email !==req.decoded.email){
-        return res.status(403).send({message:'forbidden access'})
+    // verify admin after verify token
+    app.get('/users/admin/:email', verifyToken, async (req, res) => {
+      const email = req.params.email;
+
+
+      if (email !== req.decoded.email) {
+        return res.status(403).send({ message: 'forbidden access' });
       }
       const query = { email: email }
-      const user=await userCollection.findOne(query);
-      const isAdmin = user?.role === 'admin';
-      res.send({ admin: isAdmin })
-    })
+
+      const user = await userCollection.findOne(query);
+      let admin = false;
+      if (user) {
+        admin = user?.role === 'admin';
+      }
+      res.send({ admin });
+
+
+
+
+    });
+
 
     // menu releted api
-    app.patch('/users/admin/:id', async (req, res) => {
+    app.patch('/users/admin/:id',verifyToken,verifyAdmin, async (req, res) => {
       const id = req.params.id;
       const filter = { _id: new ObjectId(id) }
       const updateDoc = {
@@ -105,7 +128,7 @@ async function run() {
 
     })
 
-    app.delete('/users/:id', async (req, res) => {
+    app.delete('/users/:id',verifyToken,verifyAdmin, async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) }
       const result = await userCollection.deleteOne(query);
