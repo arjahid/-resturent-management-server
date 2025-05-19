@@ -4,6 +4,7 @@ const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const cors = require('cors');
 const e = require('express');
 const jwt = require('jsonwebtoken');
+// const { ObjectId } = require('mongodb');
 const port = process.env.PORT || 3000;
 require('dotenv').config()
 
@@ -128,17 +129,101 @@ async function run() {
 
     })
 
-    app.delete('/users/:id',verifyToken,verifyAdmin, async (req, res) => {
+    app.delete('/menu/:id', verifyToken, verifyAdmin, async (req, res) => {
       const id = req.params.id;
-      const query = { _id: new ObjectId(id) }
-      const result = await userCollection.deleteOne(query);
+      let result;
+      try {
+        // Try deleting by ObjectId
+        result = await menuCollection.deleteOne({ _id: new ObjectId(id) });
+        if (result.deletedCount === 0) {
+          // If not found, try deleting by string id
+          result = await menuCollection.deleteOne({ _id: id });
+        }
+      } catch (e) {
+        // If ObjectId conversion fails, try deleting by string id
+        result = await menuCollection.deleteOne({ _id: id });
+      }
+      res.send(result);
+    })
+
+    app.delete('/users/:id', verifyToken, verifyAdmin, async (req, res) => {
+      const id = req.params.id;
+      let result;
+      try {
+        result = await userCollection.deleteOne({ _id: new ObjectId(id) });
+        if (result.deletedCount === 0) {
+          result = await userCollection.deleteOne({ _id: id });
+        }
+      } catch (e) {
+        result = await userCollection.deleteOne({ _id: id });
+      }
       res.send(result);
     })
 
     app.get('/menu', async (req, res) => {
       const result = await menuCollection.find().toArray();
       res.send(result)
+
     })
+    app.post('/menu',verifyToken,verifyAdmin,async(req,res)=>{
+      const menuItem = req.body;
+      const result=await menuCollection.insertOne(menuItem);
+      res.send(result);
+
+    })
+    app.patch('/menu/:id',verifyToken,verifyAdmin,async(req,res)=>{
+      const item=req.body;
+      const id=req.params.id;
+      let result;
+      const updateDoc = {
+        $set: {
+          name: item.name,
+          recipe: item.recipe,
+          price: item.price,
+          category: item.category,
+          image: item.image,
+        }
+      };
+      try {
+        result = await menuCollection.updateOne({ _id: new ObjectId(id) }, updateDoc);
+        if (result.matchedCount === 0) {
+          result = await menuCollection.updateOne({ _id: id }, updateDoc);
+        }
+      } catch (e) {
+        result = await menuCollection.updateOne({ _id: id }, updateDoc);
+      }
+      res.send(result);
+    })
+    app.delete('/menu/:id', verifyToken, verifyAdmin, async (req, res) => {
+      const id = req.params.id;
+      let result;
+      try {
+        // Try deleting by ObjectId
+        result = await menuCollection.deleteOne({ _id: new ObjectId(id) });
+        if (result.deletedCount === 0) {
+          // If not found, try deleting by string id
+          result = await menuCollection.deleteOne({ _id: id });
+        }
+      } catch (e) {
+        // If ObjectId conversion fails, try deleting by string id
+        result = await menuCollection.deleteOne({ _id: id });
+      }
+      res.send(result);
+    })
+    app.get('/menu/:id',async(req,res)=>{
+      const id = req.params.id;
+      let result;
+      try {
+        result = await menuCollection.findOne({ _id: new ObjectId(id) });
+        if (!result) {
+          result = await menuCollection.findOne({ _id: id });
+        }
+      } catch (e) {
+        result = await menuCollection.findOne({ _id: id });
+      }
+      res.send(result)
+    })
+
     app.get('/reviews', async (req, res) => {
       const result = await reviewCollection.find().toArray();
       res.send(result)
@@ -158,8 +243,15 @@ async function run() {
 
     app.delete('/carts/:id', async (req, res) => {
       const id = req.params.id;
-      const query = { _id: new ObjectId(id) };
-      const result = await cardCollection.deleteOne(query);
+      let result;
+      try {
+        result = await cardCollection.deleteOne({ _id: new ObjectId(id) });
+        if (result.deletedCount === 0) {
+          result = await cardCollection.deleteOne({ _id: id });
+        }
+      } catch (e) {
+        result = await cardCollection.deleteOne({ _id: id });
+      }
       res.send(result);
     })
 
