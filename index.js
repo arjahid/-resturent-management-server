@@ -1,13 +1,14 @@
+require('dotenv').config(); // <-- Move this to the very top
+
 const express = require('express');
 const app = express();
 const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const cors = require('cors');
 const e = require('express');
 const jwt = require('jsonwebtoken');
-const stripe=require('stripe')(process.env.STRIPE_KEY)
+const stripe = require('stripe')(process.env.STRIPE_KEY)
 // const { ObjectId } = require('mongodb');
 const port = process.env.PORT || 3000;
-require('dotenv').config()
 
 
 
@@ -35,6 +36,7 @@ async function run() {
     const menuCollection = client.db('resturentDb').collection('menu');
     const reviewCollection = client.db('resturentDb').collection('reviews');
     const cardCollection = client.db('resturentDb').collection('carts');
+    const paymentCollection = client.db('resturentDb').collection('payments');
 
 
     // jwt token
@@ -257,8 +259,29 @@ async function run() {
     })
 
     // Payment related api
+
+
     app.post('/create-payment-intent', async (req, res) => {
-      const 
+      const {price}=req.body;
+      const amount=parseInt(price*100);
+      const paymentIntent =await stripe.paymentIntents.create({
+        amount:amount,
+        currency:'usd',
+        payment_method_types:['card']
+      })
+      res.send({
+        clientSecret:paymentIntent.client_secret,
+      })
+    })
+    app.post('/payments',async(req,res)=>{
+      const payment=req.body;
+      const paymentResul=await paymentCollection.insertOne(payment);
+      console.log('payment info',payment);
+      // carefully delete each item from cart
+      const query={_id:{
+        $in: payment.cartId.map(id=>new ObjectId(id))}}
+        const deleteResult =await cardCollection.deleteMany(query);
+        res.send({paymentResul,deleteResult})
     })
 
 
