@@ -283,10 +283,14 @@ async function run() {
         const deleteResult =await cardCollection.deleteMany(query);
         res.send({paymentResul,deleteResult})
     })
-    app.get('/payments/:email',verifyToken,async(req,res)=>{
-      const query={email:req.params.email}
-      const result=await paymentCollection.find(query).toArray();
-      res.send(result)
+    app.get('/payments/:email', verifyToken, async (req, res) => {
+      // Check if the email in the URL param matches the decoded token's email
+      if (req.params.email !== req.decoded.email) {
+        return res.status(403).send({ message: 'forbidden access' });
+      }
+      const query = { email: req.params.email };
+      const result = await paymentCollection.find(query).toArray();
+      res.send(result);
     })
 
 
