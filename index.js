@@ -171,6 +171,29 @@ async function run() {
       res.send(result);
 
     })
+    app.patch('/menu/:id',verifyToken,verifyAdmin,async(req,res)=>{
+      const item=req.body;
+      const id=req.params.id;
+      let result;
+      const updateDoc = {
+        $set: {
+          name: item.name,
+          recipe: item.recipe,
+          price: item.price,
+          category: item.category,
+          image: item.image,
+        }
+      };
+      try {
+        result = await menuCollection.updateOne({ _id: new ObjectId(id) }, updateDoc);
+        if (result.matchedCount === 0) {
+          result = await menuCollection.updateOne({ _id: id }, updateDoc);
+        }
+      } catch (e) {
+        result = await menuCollection.updateOne({ _id: id }, updateDoc);
+      }
+      res.send(result);
+    })
     app.delete('/menu/:id', verifyToken, verifyAdmin, async (req, res) => {
       const id = req.params.id;
       let result;
@@ -186,6 +209,19 @@ async function run() {
         result = await menuCollection.deleteOne({ _id: id });
       }
       res.send(result);
+    })
+    app.get('/menu/:id',async(req,res)=>{
+      const id = req.params.id;
+      let result;
+      try {
+        result = await menuCollection.findOne({ _id: new ObjectId(id) });
+        if (!result) {
+          result = await menuCollection.findOne({ _id: id });
+        }
+      } catch (e) {
+        result = await menuCollection.findOne({ _id: id });
+      }
+      res.send(result)
     })
 
     app.get('/reviews', async (req, res) => {
