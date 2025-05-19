@@ -283,7 +283,7 @@ async function run() {
         const deleteResult =await cardCollection.deleteMany(query);
         res.send({paymentResul,deleteResult})
     })
-    app.get('/payments/:email',verifyToken,verifyAdmin,async(req,res)=>{
+    app.get('/payments/:email',verifyToken,async(req,res)=>{
       const query={email:req.params.email}
       const result=await paymentCollection.find(query).toArray();
       res.send(result)
