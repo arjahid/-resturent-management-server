@@ -292,6 +292,32 @@ async function run() {
       const result = await paymentCollection.find(query).toArray();
       res.send(result);
     })
+    // stats and anylysis related api
+    app.get('/admin-stats', async (req, res) => {
+      const users = await userCollection.estimatedDocumentCount();
+      const menuItem = await menuCollection.estimatedDocumentCount();
+      const orders=await paymentCollection.estimatedDocumentCount();
+      // this not best system
+      // const payments=await paymentCollection.find().toArray();
+      // const revineu=payments.reduce((total,item)=>total+item.price,0)
+      const result=await paymentCollection.aggregate([
+        {
+          $group:{
+            _id:null,
+            totalRevineu:{$sum:'$price'}
+
+          }
+        }
+      ]).toArray();
+      const revineu=result.length>0 ? result[0].totalRevineu:0;
+
+      res.send({
+        users,
+        menuItem,
+        orders,
+        revineu
+      });
+    })
 
 
 
