@@ -44,11 +44,28 @@ async function run() {
 
 
     // jwt token
-    app.post('/jwt', (req, res) => {
-      const user = req.body;
-      const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' });
-      res.send({ token })
-    })
+    // app.post('/jwt',async (req, res) => {
+    //   const {email}=req.body;
+    //   const user = req.body;
+    //   const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, { expiresIn: '1h' });
+    //   res.send({ token })
+    // })
+    // Express backend
+app.post("/jwt", async (req, res) => {
+  const { email } = req.body;
+  const user = await userCollection.findOne({ email });
+
+  if (!user) {
+    await userCollection.insertOne({ email, role: "user" }); // default role
+  }
+
+  const token = jwt.sign({ email }, process.env.ACCESS_TOKEN_SECRET, {
+    expiresIn: "1d",
+  });
+
+  res.send({ token });
+});
+
 
     // verify jwt middleware
     const verifyToken = (req, res, next) => {
