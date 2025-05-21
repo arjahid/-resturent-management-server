@@ -53,13 +53,13 @@ async function run() {
     // Express backend
 app.post("/jwt", async (req, res) => {
   const { email } = req.body;
-  const user = await Users.findOne({ email });
+  const user = await userCollection.findOne({ email });
 
   if (!user) {
-    await Users.insertOne({ email, role: "user" }); // default role
+    await userCollection.insertOne({ email, role: "user" }); // default role
   }
 
-  const token = jwt.sign({ email }, process.env.JWT_SECRET, {
+  const token = jwt.sign({ email }, process.env.ACCESS_TOKEN_SECRET, {
     expiresIn: "1d",
   });
 
